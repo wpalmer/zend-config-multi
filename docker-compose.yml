@@ -1,0 +1,21 @@
+version: '2'
+services:
+  composer:
+    image: composer/composer
+    volumes:
+      - .:/app
+      - ./vendor:/app/vendor
+    environment:
+      - COMPOSER_VENDOR_DIR=/app/vendor
+    command: install
+  phpunit:
+    image: wpalmer/php:5.5-fpm-bundle-atlanta
+    volumes:
+      - .:/app
+      - ./vendor:/app/vendor
+    links:
+      - composer
+    command:
+      - bash
+      - -c
+      - sleep 2 && while [[ ! -e /app/vendor/.composer-complete ]]; do sleep 1; done; cd /app && vendor/phpunit/phpunit/phpunit --bootstrap ./vendor/autoload.php

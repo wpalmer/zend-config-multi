@@ -1,0 +1,23 @@
+{
+  "name": "diw/zend-config-multi",
+  "authors": [
+    {"name": "Will Palmer", "email": "wmpalmer@gmail.com"}
+  ],
+  "autoload": {
+    "classmap": [
+      "src/"
+    ]
+  },
+  "require": {
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.8.0",
+    "zendframework/zendframework1": "~1.12.0"
+  },
+  "scripts": {
+    "pre-install-cmd": "rm -f /app/vendor/.composer-complete",
+    "pre-update-cmd": "rm -f /app/vendor/.composer-complete",
+    "post-install-cmd": "touch /app/vendor/.composer-complete",
+    "post-update-cmd": "touch /app/vendor/.composer-complete"
+  }
+}
