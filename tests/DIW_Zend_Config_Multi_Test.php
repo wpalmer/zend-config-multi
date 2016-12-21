@@ -168,4 +168,50 @@ class DIW_Zend_Config_Multi_Test extends PHPUnit_Framework_TestCase
             'New Deep Value added to Original post-attach() should be visible '.
             'from Multi');
     }
+
+    public function testDefaultPrefixRead()
+    {
+        $orig = new Zend_Config(array(
+            'a' => 'a',
+            'b' => 'b',
+            'prefix-1' => array(
+                'a' => 'subA',
+                'b' => 'subB',
+                'prefix-2' => array(
+                    'a' => 'subSubA',
+                    'b' => 'subSubB'
+                )
+            )
+        ));
+
+        $multi = new DIW_Zend_Config_Multi(true);
+        $multi->attach( $orig );
+        $multi->setDefaultPathPrefix(array('prefix-1', 'prefix-2'));
+        $this->assertEquals('subSubA', $multi->a,
+            'asking for a value with a prefix should get the prefixed value');
+    }
+
+    public function testDefaultPrefixWrite()
+    {
+        $orig = new Zend_Config(array(
+            'a' => 'a',
+            'b' => 'b',
+            'prefix-1' => array(
+                'a' => 'subA',
+                'b' => 'subB',
+                'prefix-2' => array(
+                    'a' => 'subSubA',
+                    'b' => 'subSubB'
+                )
+            )
+        ));
+
+        $multi = new DIW_Zend_Config_Multi(true);
+        $multi->attach( $orig );
+        $multi->setDefaultPathPrefix(array('prefix-1', 'prefix-2'));
+        $multi->a = 'subSubA-m';
+        $multi->setDefaultPathPrefix(array());
+        $this->assertEquals('subSubA-m', $multi->{'prefix-1'}->{'prefix-2'}->a,
+            'setting a value with a prefix should set the prefixed value');
+    }
 }

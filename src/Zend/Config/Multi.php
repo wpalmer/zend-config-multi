@@ -6,6 +6,7 @@ class DIW_Zend_Config_Multi extends Zend_Config
 	protected $_cfg_fallbacks;
 	protected $_cfg_writeable;
 	protected $_cfg_data_deep;
+	protected $_cfg_default_path_prefix;
 
 	public function __construct($allowModifications = false)
 	{
@@ -21,6 +22,11 @@ class DIW_Zend_Config_Multi extends Zend_Config
 		}
 
 		parent::__construct(array(), $allowModifications);
+	}
+
+	public function setDefaultPathPrefix($path)
+	{
+		$this->_cfg_default_path_prefix = (array)$path;
 	}
 
 	public function attach(Zend_Config $config, $is_dirty = false)
@@ -61,16 +67,27 @@ class DIW_Zend_Config_Multi extends Zend_Config
 	* result is just as writeable as we are. But we also need to ensure that we
 	* always return the *same* Zend_Config_Multi
 	*/
-	public function get($name, $default = null)
+	public function get($name, $default = null, $prefix = null)
 	{
+		if ($prefix === null) $prefix = $this->_cfg_default_path_prefix;
+		if ($prefix !== false) $name = array_merge((array)$prefix, (array)$name);
 
-/*
-		loop through fallbacks
-			is the fallback's value for $name known by our "multi" cache?
-			if so, continue. If not, add it to our "multi" cache
-			if we find a non-Zend_Config along the way, return that.
-			once we're done looping, return the "multi" cache.
-*/
+		if (is_array($name)) {
+			$next = $this;
+			foreach ($name as $component) {
+				if (!($next instanceof Zend_Config)) return $default;
+				$next = $next->get($component, self::$novalue, false);
+			}
+
+			if ($next === self::$novalue) return $default;
+			return $next;
+		}
+
+		// loop through fallbacks
+		//   is the fallback's value for $name known by our "multi" cache?
+		//   if so, continue. If not, add it to our "multi" cache
+		//   if we find a non-Zend_Config along the way, return that.
+		//   once we're done looping, return the "multi" cache.
 
 		$deep = new static(!$this->readOnly());
 		$found = self::$novalue;
@@ -112,11 +129,40 @@ class DIW_Zend_Config_Multi extends Zend_Config
 
 	public function __set($name, $value)
 	{
-		if ($this->_allowModifications) {
-			$this->_cfg_writeable->__set($name, $value);
-		} else {
+		if (!$this->_allowModifications) {
 			throw new Zend_Config_Exception('Zend_Config is read only');
 		}
+
+		$prefix = $this->_cfg_default_path_prefix;
+		if ($prefix !== false) $name = array_merge((array)$prefix, (array)$name);
+
+		if (is_array($name)) {
+			$tail = array_pop($name);
+			$next = $this->_cfg_writeable;
+			while (true) {
+				if (!($next instanceof Zend_Config)) {
+					// we're missing a deep config (or part of the path is not a config)
+					// so let's create it, deeply
+					$prev->{ $component } = new Zend_Config(array(), true);
+					$next = $prev->{ $component };
+					while(!empty($name)) {
+						$component = array_shift($name);
+						$next->{ $component } = new Zend_Config(array(), true);
+						$next = $next->{ $component };
+					}
+					break;
+				}
+
+				if (empty($name)) break;
+				$component = array_shift($name);
+				$prev = $next;
+				$next = $next->get($component, self::$novalue, false);
+			}
+
+			return $next->__set($tail, $value);
+		}
+
+		return $this->_cfg_writeable->__set($name, $value);
 	}
 
 	public function __clone()
