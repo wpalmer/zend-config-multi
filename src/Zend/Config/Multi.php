@@ -153,13 +153,23 @@ class DIW_Zend_Config_Multi extends Zend_Config
 		return $merged;
 	}
 
-	public function toArray($only_dirty = true)
+	public function toArray($only_dirty = false)
 	{
 		$result = array();
 		foreach ( array_reverse($this->_fallbacks($only_dirty)) as $config) {
 			$result = static::_mergeDeep($result, $config->toArray());
 		}
 		return $result;
+	}
+
+	public function toDirtyArray()
+	{
+		return $this->toArray(true);
+	}
+
+	public function getDirty()
+	{
+		return new Zend_Config($this->toDirtyArray());
 	}
 
 	public function __isset($name)

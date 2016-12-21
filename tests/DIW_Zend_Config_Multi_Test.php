@@ -21,7 +21,7 @@ class DIW_Zend_Config_Multi_Test extends PHPUnit_Framework_TestCase
         $multi->sectionA->Ad = 'three-Ad';
         $multi->sectionB = new Zend_Config(array('Ba' => 'three-Ba'));
 
-        $writer = new Zend_Config_Writer_Ini(array('config' => $multi));
+        $writer = new Zend_Config_Writer_Ini(array('config' => $multi->getDirty()));
 
         $this->assertEquals(
             trim(
@@ -131,7 +131,7 @@ class DIW_Zend_Config_Multi_Test extends PHPUnit_Framework_TestCase
                 'deep-aKey' => 'deep-two-aValue',
                 'deep-cKey' => 'deep-writeable-cValue'
             )
-        ), $multi->toArray());
+        ), $multi->toDirtyArray());
     }
 
     public function testWriteOfMultiAndOriginal()
