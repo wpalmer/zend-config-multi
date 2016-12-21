@@ -203,6 +203,12 @@ class DIW_Zend_Config_Multi extends Zend_Config
 	{
 		$result = array();
 		foreach ( array_reverse($this->_fallbacks($only_dirty)) as $config) {
+			if ($this->_cfg_default_path_prefix) {
+				$wrap = new self($config);
+				$wrap->attach($config);
+				$config = $wrap->get($this->_cfg_default_path_prefix, self::$novalue, false);
+				if ($config === self::$novalue) $config = new Zend_Config(array());
+			}
 			$result = self::_mergeDeep($result, $config->toArray());
 		}
 		return $result;
@@ -237,29 +243,30 @@ class DIW_Zend_Config_Multi extends Zend_Config
 		return count( $this->toArray($only_dirty) );
 	}
 
-	public function current()
+	private $iterator;
+	public function rewind()
 	{
-		throw new Zend_Config_Exception('Zend_Config_Multi does not implement the Iterator interface');
-	}
-
-	public function key()
-	{
-		throw new Zend_Config_Exception('Zend_Config_Multi does not implement the Iterator interface');
+		$this->iterator = new ArrayIterator(array_keys($this->toArray()));
 	}
 
 	public function next()
 	{
-		throw new Zend_Config_Exception('Zend_Config_Multi does not implement the Iterator interface');
+		$this->iterator->next();
 	}
 
-	public function rewind()
+	public function current()
 	{
-		throw new Zend_Config_Exception('Zend_Config_Multi does not implement the Iterator interface');
+		return $this->get( $this->iterator->current() );
+	}
+
+	public function key()
+	{
+		return $this->iterator->current();
 	}
 
 	public function valid()
 	{
-		throw new Zend_Config_Exception('Zend_Config_Multi does not implement the Iterator interface');
+		return $this->iterator->valid();
 	}
 
 	/*

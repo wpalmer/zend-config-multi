@@ -214,4 +214,76 @@ class DIW_Zend_Config_Multi_Test extends PHPUnit_Framework_TestCase
         $this->assertEquals('subSubA-m', $multi->{'prefix-1'}->{'prefix-2'}->a,
             'setting a value with a prefix should set the prefixed value');
     }
+
+    public function testIteratorInterface()
+    {
+        $multi = new DIW_Zend_Config_Multi();
+        $multi->attach( new Zend_Config(array(
+            'a' => 'one',
+            'b' => 'two'
+        )) );
+
+        $multi->override( new Zend_Config(array(
+            'b' => 'two-two',
+            'c' => 'three'
+        )) );
+
+        $result = array();
+        foreach ($multi as $key => $value) {
+            $result[ $key ] = $value;
+        }
+
+        $this->assertEquals(
+            array(
+                'a' => 'one',
+                'b' => 'two-two',
+                'c' => 'three'
+            ),
+            $result,
+            'itrating over Multi should iterate over all attached Configs');
+    }
+
+    public function testIteratorInterfacePrefix()
+    {
+        $multi = new DIW_Zend_Config_Multi(true);
+        $multi->attach(new Zend_Config(array(
+            'a' => 'a',
+            'b' => 'b',
+            'prefix-1' => array(
+                'a' => 'subA',
+                'b' => 'subB',
+                'prefix-2' => array(
+                    'a' => 'subSubA',
+                    'b' => 'subSubB'
+                )
+            )
+        )));
+        $multi->override(new Zend_Config(array(
+            'b' => 'b-two',
+            'c' => 'c-two',
+            'prefix-1' => array(
+                'b' => 'subB-two',
+                'c' => 'subC-two',
+                'prefix-2' => array(
+                    'b' => 'subSubB-two',
+                    'c' => 'subSubC-two'
+                )
+            )
+        )));
+
+        $multi->setDefaultPathPrefix(array('prefix-1', 'prefix-2'));
+        $result = array();
+        foreach ($multi as $key => $value) {
+            $result[ $key ] = $value;
+        }
+
+        $this->assertEquals(
+            array(
+                'a' => 'subSubA',
+                'b' => 'subSubB-two',
+                'c' => 'subSubC-two'
+            ),
+            $result,
+            'itrating over Multi should iterate over all attached Configs with prefix');
+    }
 }
