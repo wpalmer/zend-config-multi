@@ -89,7 +89,7 @@ class DIW_Zend_Config_Multi extends Zend_Config
 		//   if we find a non-Zend_Config along the way, return that.
 		//   once we're done looping, return the "multi" cache.
 
-		$deep = new static(!$this->readOnly());
+		$deep = new self(!$this->readOnly());
 		$found = self::$novalue;
 		if ($this->_cfg_writeable) {
 			$found = $this->_cfg_writeable->get($name, self::$novalue);
@@ -190,7 +190,7 @@ class DIW_Zend_Config_Multi extends Zend_Config
 				is_array($value) &&
 				(array_key_exists($key, $merged) && is_array($merged[$key]))
 			){
-				$merged[$key] = static::_mergeDeep($merged[$key], $value);
+				$merged[$key] = self::_mergeDeep($merged[$key], $value);
 			} else {
 				$merged[$key] = $value;
 			}
@@ -203,7 +203,7 @@ class DIW_Zend_Config_Multi extends Zend_Config
 	{
 		$result = array();
 		foreach ( array_reverse($this->_fallbacks($only_dirty)) as $config) {
-			$result = static::_mergeDeep($result, $config->toArray());
+			$result = self::_mergeDeep($result, $config->toArray());
 		}
 		return $result;
 	}
